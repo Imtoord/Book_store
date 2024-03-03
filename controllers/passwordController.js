@@ -24,8 +24,8 @@ const forgotPasswordLink = asyncHandler(async (req, res) => {
     const user = await User.findOne({ email: req.body.email });
     if (!user) return res.status(404).json({ message: 'User not found' });
 
-   const token = jwt.sign({ _id: user._id }, process.env.JWT_SECRET_KEY + user.password, { expiresIn: '1h' });
-   const link = `http://localhost:3000/forgot-password/${user._id}/${token}`;
+    const token = jwt.sign({ _id: user._id }, process.env.JWT_SECRET_KEY + user.password, { expiresIn: '1h' });
+    const link = `${process.env.DOMAINNAME}/forgot-password/${user._id}/${token}`;
 
     const transporter = nodemailer.createTransport({
         service: 'gmail',
@@ -47,7 +47,7 @@ const forgotPasswordLink = asyncHandler(async (req, res) => {
 
     transporter.sendMail(mailOptions, (err, info) => {
         if (err) {
-            return res.status(400).json({ message: err});
+            return res.status(400).json({ message: err });
         }
         res.status(200).json({ message: "Check your email", email: user.email });
     });
@@ -89,7 +89,7 @@ const resetPassword = asyncHandler(async (req, res) => {
 
 module.exports = {
     forgotPasswordForm,
-    forgotPasswordLink, 
+    forgotPasswordLink,
     resetPasswordView,
     resetPassword
 };

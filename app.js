@@ -1,14 +1,17 @@
 const express = require('express');
 const connectToDB = require('./config/db');
 const path = require('path');
+const cors = require('cors');
+const compression = require('compression');
 require('dotenv').config();
 
 const app = express();
 app.use(express.json());
+app.use(cors());
+app.use(compression());
 app.use(require('./middlewares/logger'))
 app.use(express.static(path.join(__dirname, 'images')));
 app.use(express.urlencoded({ extended: false }));
-
 connectToDB()
 
 // Routes
