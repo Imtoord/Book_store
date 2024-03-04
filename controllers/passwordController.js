@@ -25,7 +25,7 @@ const forgotPasswordLink = asyncHandler(async (req, res) => {
     if (!user) return res.status(404).json({ message: 'User not found' });
 
     const token = jwt.sign({ _id: user._id }, process.env.JWT_SECRET_KEY + user.password, { expiresIn: '1h' });
-    const link = `${process.env.DOMAINNAME}/forgot-password/${user._id}/${token}`;
+    const link = `${process.env.DOMAINNAME}forgot-password/${user._id}/${token}`;
 
     const transporter = nodemailer.createTransport({
         service: 'gmail',
