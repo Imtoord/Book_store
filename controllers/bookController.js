@@ -13,10 +13,10 @@ const getAllBook = asyncHandler(
 
     async (req, res) => {
         try {
-            const pageNumber = req.query.pageNumber ? req.query.pageNumber : 0
+            const pageNumber = req.query.pageNumber || 1
             const number = 5
-            const min = req.query.min ? req.query.min : 0
-            const max = req.query.max ? req.query.max : Number.MAX_VALUE
+            const min = req.query.min || 0
+            const max = req.query.max || Number.MAX_VALUE
             const books = await Book.find({ price: { $lte: max, $gte: min } })
                 .skip((pageNumber - 1) * number).limit(number)
             res.json({ data: { books }})
