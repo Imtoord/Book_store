@@ -3,6 +3,7 @@ const connectToDB = require('./config/db');
 const path = require('path');
 const cors = require('cors');
 const compression = require('compression');
+const { ErrorHandler } = require('./utils/errorHandler');
 require('dotenv').config();
 
 const app = express();
@@ -19,13 +20,16 @@ app.use('/book', require('./routes/books'));
 app.use('/author', require('./routes/authors'));
 app.use('/auth', require('./routes/auth'))
 app.use('/user', require('./routes/user'))
-app.use('/upload', require('./routes/upload'))
 app.use('/forgot-password', require('./routes/password'))
 
 
 // Root route
 app.get('/', (req, res) => {
-    res.send('Hello World');
+    res.send('<h1>Hello World</h1>');
+});
+
+app.all('*', (req, res, next) => {
+    next(new ErrorHandler(`Can't find ${req.originalUrl} on this server`, 404));
 });
 
 const port = process.env.PORT || 3000;

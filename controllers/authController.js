@@ -1,6 +1,13 @@
 const asyncHandler = require("express-async-handler");
 const bcrypt = require("bcrypt");
 const { User, validate, validatelogin } = require("../models/User");
+const multer = require("multer");
+const { ErrorHandler } = require("../utils/errorHandler");
+
+const storage = multer.memoryStorage();
+const upload = multer({
+  storage,
+}).single("image");
 
 /**
  * @description Register New User
@@ -8,22 +15,37 @@ const { User, validate, validatelogin } = require("../models/User");
  * @route /user/register
  * @access Public
  */
-const register = asyncHandler(async (req, res) => {
-  const { error } = validate(req.body);
-  if (error) return res.status(400).json({ message: error.message });
+const register = asyncHandler(async (req, res, next) => {
+  upload(req, res, async (err) => {
+    if (err) {
+      return next(new ErrorHandler(err.message, 400));
+    }
+    let image;
+    if (!req.file) {
+      const defaultAvatarPath = "images/av.png";
+      image = {
+        data: fs.readFileSync(defaultAvatarPath),
+        contentType: "image/jpeg",
+      };
+    } else {
+      image = {
+        data: req.file.buffer,
+        contentType: req.file.mimetype,
+      };
+    }
 
-  const oldUser = await User.findOne({ email: req.body.email });
-  if (oldUser) return res.status(400).json({ message: "User already exists" });
+    const { error } = validate(req.body);
+    if (error) return res.status(400).json({ message: error.message });
 
-  const salt = await bcrypt.genSalt(10);
-  req.body.password = await bcrypt.hash(req.body.password, salt);
+    const oldUser = await User.findOne({ email: req.body.email });
+    if (oldUser)
+      return res.status(400).json({ message: "User already exists" });
 
-  const user = new User(req.body);
-  const result = await user.save();
-  const { password, ...other } = result._doc;
-  const token = user.generateAuthToken();
-
-  res.status(201).json({ access_token: token, user: other });
+    const user = new User({ ...req.body, image: image });
+    const result = await user.save();
+    const { password, ...other } = result._doc;
+    res.status(201).json({ user: other });
+  });
 });
 
 /**
