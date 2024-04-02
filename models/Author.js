@@ -2,6 +2,7 @@ const mongoose = require("mongoose");
 const Joi = require("joi");
 const jwt = require("jsonwebtoken");
 const Schema = mongoose.Schema;
+const bcrypt = require("bcrypt");
 
 const AuthorSchema = new Schema(
   {
@@ -27,8 +28,7 @@ const AuthorSchema = new Schema(
       unique: true,
     },
     image: {
-      data: Buffer,
-      contentType: String,
+      type: String,
     },
     access_token: { type: String },
   },
@@ -38,14 +38,14 @@ const AuthorSchema = new Schema(
 );
 
 AuthorSchema.methods.generateAuthToken = function () {
-  return jwt.sign({ _id: this._id }, process.env.JWT_SECRET_KEY);
+  return jwt.sign({ _id: this._id }, process.env.JWT_SECRET);
 };
 
-const Author = mongoose.model("Author", AuthorSchema);
 function validateCreateAuthor(obj) {
   const schame = Joi.object({
     firstName: Joi.string().min(3).max(30).required(),
     lastName: Joi.string().min(3).max(30).required(),
+    bio: Joi.string().min(15).required(),
     email: Joi.string().email().required(),
     password: Joi.string().min(3).max(30).required(),
   });
@@ -56,6 +56,7 @@ function validateUpdate(object) {
   const schame = Joi.object({
     firstName: Joi.string().min(3).max(30),
     lastName: Joi.string().min(3).max(30),
+    bio: Joi.string().min(15),
     email: Joi.string().email(),
     password: Joi.string().min(3).max(30),
   });
@@ -72,20 +73,25 @@ const verifyLogin = (obj) => {
 };
 
 AuthorSchema.pre("save", function (next) {
-  if (this.isNew) {
+  if (this.isNeww) {
     this.access_token = jwt.sign(
-      { email: this.email, role: this.role },
-      process.env.SECRET_KEY
+      { email: this.email },
+      process.env.JWT_SECRET_KEY
     );
   }
-    if (this.password) {
-      this.password = bcrypt.hashSync(this.password, 10);
-    }
-    next();
+  next();
+});
+AuthorSchema.pre("findOne", function (next) {
+  this.access_token = jwt.sign(
+    { email: this.email },
+    process.env.JWT_SECRET_KEY
+  );
+
+  next();
 });
 
 module.exports = {
-  Author,
+  Author: mongoose.model("Author", AuthorSchema),
   validateCreateAuthor,
   validateUpdate,
   verifyLogin,

@@ -5,6 +5,7 @@ const cors = require('cors');
 const compression = require('compression');
 const { ErrorHandler } = require('./utils/errorHandler');
 require('dotenv').config();
+const morgan = require("morgan");
 
 const app = express();
 app.use(express.json());
@@ -15,10 +16,16 @@ app.use(express.static(path.join(__dirname, 'images')));
 app.use(express.urlencoded({ extended: false }));
 connectToDB()
 
+
+if (process.env.NODE_ENV === "development") {
+  app.use(morgan("dev"));
+}
+
 // Routes
 app.use('/book', require('./routes/books'));
 app.use('/author', require('./routes/authors'));
 app.use('/auth', require('./routes/auth'))
+app.use("/authAuthor", require("./routes/authAuthor"));
 app.use('/user', require('./routes/user'))
 app.use('/forgot-password', require('./routes/password'))
 

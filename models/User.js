@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 const Joi = require("joi");
 const jwt = require("jsonwebtoken");
 const Schema = mongoose.Schema;
-const UserScema = new Schema({
+const UserSchema = new Schema({
   username: {
     type: String,
     required: true,
@@ -24,14 +24,16 @@ const UserScema = new Schema({
     type: Boolean,
     default: false,
   },
-  Image:{
-    type:Buffer,
-    contentType:String,
+  image: {
+    type: String,
   },
   access_token: { type: String },
 });
 
-const User = mongoose.model("User", UserScema);
+UserSchema.methods.generateAuthToken = function () {
+  return jwt.sign({ _id: this._id }, process.env.JWT_SECRET_KEY);
+};
+
 function validate(user) {
   const schema = Joi.object({
     username: Joi.string().trim().required(),
@@ -40,6 +42,7 @@ function validate(user) {
     firstName: Joi.string().min(3).max(20).trim().required(),
     lastName: Joi.string().min(3).max(20).trim().required(),
     isAdmin: Joi.boolean(),
+    password: Joi.string().min(3).max(30).required(),
   });
   return schema.validate(user);
 }
@@ -51,6 +54,7 @@ function validateUpdate(user) {
     password: Joi.string().min(8).trim(),
     username: Joi.string().min(3).max(20).trim(),
     isAdmin: Joi.boolean(),
+    password: Joi.string().min(3).max(30),
   });
   return schema.validate(user);
 }
@@ -63,18 +67,19 @@ function validatelogin(user) {
   return schema.validate(user);
 }
 
-UserScema.pre("save", function (next) {
-  if (this.isNew) {
+UserSchema.pre("save", function (next) {
+  if (this.isNeww) {
     this.access_token = jwt.sign(
-      { email: this.email, role: this.role },
-      process.env.SECRET_KEY
+      { email: this.email },
+      process.env.JWT_SECRET_KEY
     );
   }
-  if(this.password){
-    this.password = bcrypt.hashSync(this.password, 10);
-  }
-  next()
+  next();
 });
+
+
+const User = mongoose.model("User", UserSchema);
+
 module.exports = {
   User,
   validate,

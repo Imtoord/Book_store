@@ -5,10 +5,10 @@ const {
     verifyTokenAndAdmin,
 } = require("../middlewares/verifyToken");
 const {
-    getAllUser,
-    getSingleUser,
-    updateUser,
-    deleteUser,
+  getAllUsers,
+  getSingleUser,
+  updateUser,
+  deleteUser,
 } = require("../controllers/userController");
 
 router.route('/:id')
@@ -16,6 +16,6 @@ router.route('/:id')
     .get(verifyTokenAndAuthorization, getSingleUser)
     .put(verifyTokenAndAuthorization, updateUser)
 
-router.get("/", verifyTokenAndAdmin, getAllUser);
+router.get("/", verifyTokenAndAdmin, getAllUsers);
 
 module.exports = router;

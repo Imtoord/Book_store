@@ -45,11 +45,11 @@ const BookSchema = new Schema(
   }
 );
 
-function validateInsert(obj) {
+function validateInsertBook(obj) {
   const schema = Joi.object({
     title: Joi.string().min(3).max(50).trim().required(),
     description: Joi.string().min(3).trim().required(),
-    author: Joi.string().objectId().required(),
+    author: Joi.string().hex().length(24).required(),
     rating: Joi.number().min(0).max(5),
     cover: Joi.string().valid("hard", "soft").required(),
     price: Joi.number().min(1).max(1000).required(),
@@ -71,8 +71,9 @@ function validateUpdate(object) {
 }
 
 const Book = mongoose.model("Book", BookSchema);
+
 module.exports = {
   Book,
   validateUpdate,
-  validateInsert,
+  validateInsertBook,
 };

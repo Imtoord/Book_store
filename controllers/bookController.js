@@ -1,5 +1,4 @@
-const { tr } = require("faker/lib/locales");
-const { Book, validateinsert, validateUpdate } = require("../models/Book");
+const { Book, validateUpdate, validateInsertBook } = require("../models/Book");
 const asyncHandler = require("express-async-handler");
 
 /**
@@ -44,7 +43,7 @@ const getBookById = asyncHandler(async (req, res) => {
  * @access public
  */
 const createBook = asyncHandler(async (req, res) => {
-  const { error } = validateinsert(req.body);
+  const { error } = validateInsertBook(req.body);
   if (error) return res.status(400).json(error.message);
   const book = new Book(req.body);
   const result = await book.save();

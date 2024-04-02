@@ -1,13 +1,23 @@
 const asyncHandler = require("express-async-handler");
 const bcrypt = require("bcrypt");
-const { User, validate, validatelogin } = require("../models/User");
 const multer = require("multer");
+const path = require("path");
 const { ErrorHandler } = require("../utils/errorHandler");
+const { User, validate, validatelogin } = require("../models/User"); // Import User model here
 
-const storage = multer.memoryStorage();
-const upload = multer({
-  storage,
-}).single("image");
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, path.join(__dirname, "../images"));
+  },
+  filename: (req, file, cb) => {
+    const ext = file.mimetype.split("/")[1].toLowerCase();
+    if (ext !== "png" && ext !== "jpg" && ext !== "jpeg")
+      cb(new Error("not supported"), null);
+    cb(null, new Date().getTime() + "-" + file.originalname);
+  },
+});
+
+const upload = multer({ storage: storage }).single("image");
 
 /**
  * @description Register New User
@@ -20,28 +30,21 @@ const register = asyncHandler(async (req, res, next) => {
     if (err) {
       return next(new ErrorHandler(err.message, 400));
     }
-    let image;
-    if (!req.file) {
-      const defaultAvatarPath = "images/av.png";
-      image = {
-        data: fs.readFileSync(defaultAvatarPath),
-        contentType: "image/jpeg",
-      };
-    } else {
-      image = {
-        data: req.file.buffer,
-        contentType: req.file.mimetype,
-      };
-    }
 
     const { error } = validate(req.body);
     if (error) return res.status(400).json({ message: error.message });
+
+    let imageUrl = req.image;
+    if (!imageUrl) {
+      imageUrl = `${req.protocol}://${req.get("host")}/images/av.png`;
+    }
 
     const oldUser = await User.findOne({ email: req.body.email });
     if (oldUser)
       return res.status(400).json({ message: "User already exists" });
 
-    const user = new User({ ...req.body, image: image });
+    req.body.password = await bcrypt.hash(req.body.password, 10);
+    const user = new User({ ...req.body, image: imageUrl });
     const result = await user.save();
     const { password, ...other } = result._doc;
     res.status(201).json({ user: other });
