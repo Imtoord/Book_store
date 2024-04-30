@@ -1,15 +1,19 @@
 const asyncHandler = require("express-async-handler");
-const slugify = require("slugify");
+
 const { ErrorHandler } = require("../utils/errorHandler");
 const ApiFeatures = require("../utils/apiFeatuers");
 
-// 🫡🥶😬 delete
+
+// delete
 exports.deleteOne = (Model) =>
   asyncHandler(async (req, res, next) => {
-    const docs = await Model.findByIdAndDelete(req.params.id);
+
+    const docs = await User.findByIdAndDelete(req.params.id);
+
     if (!docs) {
       return next(new ErrorHandler(`${Model.name} not found`, 404));
     }
+    await docs.remove()
     return res.status(203).json({
       message: `${Model.name} deleted successfully`,
     });
@@ -31,16 +35,7 @@ exports.updateOne = (Model) =>
     });
   });
 
-exports.applySlugify = () =>
-  asyncHandler((req, res, next) => {
-    if (req.body.name) {
-      req.body.slug = slugify(req.body.name);
-    } else if (req.body.title) {
-      req.body.slug = slugify(req.body.title);
-    }
-    next();
-  });
-
+// get one
 exports.getOne = (Model) =>
   asyncHandler(async (req, res, next) => {
     const docs = await Model.findById(req.params.id);
@@ -50,6 +45,7 @@ exports.getOne = (Model) =>
     return res.status(200).json({ data: docs });
   });
 
+// create One
 exports.createOne = (Model) =>
   asyncHandler(async (req, res, next) => {
     if (req.params.categoryId) {
@@ -63,6 +59,7 @@ exports.createOne = (Model) =>
     });
   });
 
+// get all
 exports.getAll = (Model, modelname = "") =>
   asyncHandler(async (req, res) => {
     let filterobjx = {};
@@ -70,8 +67,6 @@ exports.getAll = (Model, modelname = "") =>
       filterobjx = req.filterobj;
     }
 
-    console.log("object");
-    console.log(filterobjx);
     // build query
     const documentCounet = await Model.countDocuments();
     const docs = new ApiFeatures(Model.find(filterobjx), req.query)

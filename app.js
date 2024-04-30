@@ -1,45 +1,45 @@
-const express = require('express');
-const connectToDB = require('./config/db');
-const path = require('path');
-const cors = require('cors');
-const compression = require('compression');
-const { ErrorHandler } = require('./utils/errorHandler');
+const morgan = require("morgan"); 
 require('dotenv').config();
-const morgan = require("morgan");
-
+const express = require('express');
 const app = express();
-app.use(express.json());
-app.use(cors());
-app.use(compression());
-app.use(require('./middlewares/logger'))
-app.use(express.static(path.join(__dirname, 'images')));
-app.use(express.urlencoded({ extended: false }));
+
+const connectToDB = require('./config/db');
+const { ErrorHandler } = require('./utils/errorHandler');
+const { globalError } = require('./middlewares/errorMiddleware');
+
+// connect with DB // next( new ErrorHandler(mge, statuscoed) )
 connectToDB()
+
+// middleware
+app.use(express.json());// json ==> obj
+app.use(express.urlencoded({ extended: false })); // form data
+app.use("/uploads", express.static("uploads"));// image cove 
 
 
 if (process.env.NODE_ENV === "development") {
   app.use(morgan("dev"));
 }
 
-// Routes
-app.use('/book', require('./routes/books'));
-app.use('/author', require('./routes/authors'));
-app.use('/auth', require('./routes/auth'))
-app.use("/authAuthor", require("./routes/authAuthor"));
-app.use('/user', require('./routes/user'))
-app.use('/forgot-password', require('./routes/password'))
+// root Router 
+app.use('/api/v1', require('./routes/index'));
 
-
-// Root route
-app.get('/', (req, res) => {
-    res.send('<h1>Hello World</h1>');
-});
 
 app.all('*', (req, res, next) => {
-    next(new ErrorHandler(`Can't find ${req.originalUrl} on this server`, 404));
+    next(
+      new ErrorHandler(
+        `Can't find ${req.method} ${req.originalUrl} on this server`,
+        404
+      )
+    );
 });
 
+// global Error
+app.use(globalError) // 
+
+// app prot & app listen
 const port = process.env.PORT || 3000;
-app.listen(port, () => {
-    console.log(`Listening on port ${port}`);
-});
+app.listen(port, () => console.log(`Listening on port ${port}`))
+
+
+
+// next(errr) ==> req, res, next

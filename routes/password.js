@@ -1,12 +1,15 @@
 const router = require('express').Router()
-const { forgotPasswordForm, forgotPasswordLink, resetPasswordView,resetPassword } = require('../controllers/passwordController')
+const {
+  checkUser,
+  getForm,
+  updatePasswordAndSave,
+} = require("../controllers/passwordController");
 
-router.route('/')
-    .get(forgotPasswordForm)
-    .post(forgotPasswordLink)
+router.route("/").post(checkUser);
 
-router.route('/:id/:token')
-    .get(resetPasswordView)
-    .post(resetPassword)
+router
+  .route("/:id/:token")
+  .get(getForm)
+  .post(updatePasswordAndSave);
 
 module.exports = router

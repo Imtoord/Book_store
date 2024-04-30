@@ -1,8 +1,12 @@
-const bcrypt = require("bcrypt");
-const asyncHandler = require("express-async-handler");
-const { User, validateUpdate } = require("../models/User");
-const errorHandler = require("../utils/errorHandler");
-const mongoose = require("mongoose");
+const { User } = require("../models/User");
+
+const {
+  getAll,
+  createOne,
+  getOne,
+  updateOne,
+  deleteOne,
+} = require("./factory");
 
 /**
  * @description Get all users
@@ -10,10 +14,7 @@ const mongoose = require("mongoose");
  * @route /user
  * @access Private
  */
-const getAllUsers = asyncHandler(async (req, res) => {
-  const users = await User.find().select("-password");
-  res.status(200).json({ users });
-});
+exports.getAllUsers = getAll(User);
 
 /**
  * @description Get a single user by ID
@@ -21,15 +22,7 @@ const getAllUsers = asyncHandler(async (req, res) => {
  * @route /user/:id
  * @access Private (only admin & user himself)
  */
-const getSingleUser = asyncHandler(async (req, res) => {
-  if (!mongoose.Types.ObjectId.isValid(req.params.id))
-    return res.status(400).json({ message: "Invalid user ID format" });
-
-  const user = await User.findById(req.params.id).select("-password");
-  if (!user) return res.status(404).json({ message: "User not found" });
-
-  res.status(200).json({ user });
-});
+exports.getSingleUser = getOne(User);
 
 /**
  * @description Update user
@@ -37,24 +30,7 @@ const getSingleUser = asyncHandler(async (req, res) => {
  * @route /user/:id
  * @access Private
  */
-const updateUser = asyncHandler(async (req, res) => {
-  const { error } = validateUpdate(req.body);
-  if (error) return res.status(400).json({ message: error.message });
-
-  const { password, ...updateFields } = req.body;
-  if (password) updateFields.password = await bcrypt.hash(password, 10);
-
-  const updatedUser = await User.findByIdAndUpdate(
-    req.params.id,
-    updateFields,
-    { new: true }
-  ).select("-password");
-  if (!updatedUser) return res.status(404).json({ message: "User not found" });
-
-  res
-    .status(200)
-    .json({ message: "User updated successfully", user: updatedUser });
-});
+exports.updateUser = updateOne(User);
 
 /**
  * @description Delete user
@@ -62,14 +38,13 @@ const updateUser = asyncHandler(async (req, res) => {
  * @route /user/:id
  * @access Private (only admin & user himself)
  */
-const deleteUser = asyncHandler(async (req, res) => {
-  if (!mongoose.Types.ObjectId.isValid(req.params.id))
-    return res.status(400).json({ message: "Invalid user ID format" });
+exports.deleteUser = deleteOne(User);
 
-  const user = await User.findByIdAndDelete(req.params.id).select("-password");
-  if (!user) return res.status(404).json({ message: "User not found" });
+/**
+ * @description Delete user
+ * @method DELETE
+ * @route /user/:id
+ * @access Private (only admin & user himself)
+ */
+exports.createUser = createOne(User);
 
-  res.status(200).json({ message: "User deleted successfully", user });
-});
-
-module.exports = { getAllUsers, getSingleUser, updateUser, deleteUser };

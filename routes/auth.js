@@ -1,7 +1,26 @@
-const express = require('express');
-const { register,login } = require('../controllers/authController');
+const express = require("express");
 const router = express.Router();
-router.post('/register', register);
+
+const { verifyToken } = require("../middlewares/verifyToken");
+
+const {
+  signup,
+  login,
+  changePassword,
+  getMe,
+  logout,
+  upload,
+  resizeImage,
+} = require("../controllers/authController");
+const userController = require("../controllers/userController");
+
+router.post("/register", upload, resizeImage, signup); // 200 250
 router.post("/login", login);
 
+router.use(verifyToken);
+
+router.post("/logout", logout);
+router.post("/changePassword", getMe, changePassword);
+router.put("/updateMy", getMe, userController.updateUser);
+router.get("/getmy", getMe, userController.getSingleUser);
 module.exports = router;

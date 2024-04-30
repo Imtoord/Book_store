@@ -1,75 +1,173 @@
+const jwt = require("jsonwebtoken");
 const asyncHandler = require("express-async-handler");
 const bcrypt = require("bcrypt");
-const multer = require("multer");
-const path = require("path");
+
 const { ErrorHandler } = require("../utils/errorHandler");
-const { User, validate, validatelogin } = require("../models/User"); // Import User model here
+const { User } = require("../models/User");
 
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, path.join(__dirname, "../images"));
-  },
-  filename: (req, file, cb) => {
-    const ext = file.mimetype.split("/")[1].toLowerCase();
-    if (ext !== "png" && ext !== "jpg" && ext !== "jpeg")
-      cb(new Error("not supported"), null);
-    cb(null, new Date().getTime() + "-" + file.originalname);
-  },
-});
+const {
+  uploadSingleImage,
+  resizeImage,
+} = require("../middlewares/uploadImageMiddleware");
 
-const upload = multer({ storage: storage }).single("image");
+// Image upload
+exports.upload = uploadSingleImage("image");
+
+const arr = ["users", "user", "jpeg", 226, 226, 95];
+exports.resizeImage = resizeImage(arr);
 
 /**
- * @description Register New User
- * @method POST
- * @route /user/register
- * @access Public
+ * @description signup
+ * @route POST /api/auth/signup
+ * @access public
  */
-const register = asyncHandler(async (req, res, next) => {
-  upload(req, res, async (err) => {
-    if (err) {
-      return next(new ErrorHandler(err.message, 400));
+exports.signup = asyncHandler(async (req, res, next) => {
+  try {
+    const { username, email, password } = req.body;
+    let { image } = req.body;
+
+    const emailx = await User.findOne({ email });
+    if (emailx) {
+      next(new ErrorHandler("email already exists", 400));
     }
 
-    const { error } = validate(req.body);
-    if (error) return res.status(400).json({ message: error.message });
-
-    let imageUrl = req.image;
-    if (!imageUrl) {
-      imageUrl = `${req.protocol}://${req.get("host")}/images/av.png`;
+    if (!image) {
+      image = `${process.env.HOST}/uploads/users/av.png`;
     }
 
-    const oldUser = await User.findOne({ email: req.body.email });
-    if (oldUser)
-      return res.status(400).json({ message: "User already exists" });
+    const doc = await User.create({ username, email, password, image });
+    const userJwt = await doc.generateAuthToken();
 
-    req.body.password = await bcrypt.hash(req.body.password, 10);
-    const user = new User({ ...req.body, image: imageUrl });
-    const result = await user.save();
-    const { password, ...other } = result._doc;
-    res.status(201).json({ user: other });
+    doc.tokens.push({ token: userJwt });
+    await doc.save();
+    const { password: pass, tokens, ...userData } = doc._doc;
+    res.status(201).json({
+      success: true,
+      data: {
+        user: doc,
+        token: userJwt,
+      },
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
+ * @description login
+ * @route POST /api/auth/signup
+ * @access public
+ */
+exports.login = asyncHandler(async (req, res, next) => {
+  try {
+    const { email, password } = req.body;
+    let user;
+    if (email) {
+      user = await User.findOne({ email });
+    } else {
+      return next(new ErrorHandler("Username or email is required", 400));
+    }
+
+    if (!user) {
+      return next(new ErrorHandler("User not found", 404));
+    }
+
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return next(new ErrorHandler("Invalid password", 401));
+    }
+
+    const userJwt = await user.generateAuthToken();
+    user.tokens.push({ token: userJwt });
+    await user.save();
+    // remove password form res
+    // const { password: pass, ...userData } = user._doc;
+    return res.status(200).json({
+      success: true,
+      data: {
+        user: user,
+        token: userJwt,
+      },
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
+ * @description logout
+ * @route POST /api/auth/logout
+ * @access public
+ */
+exports.logout = asyncHandler(async (req, res, next) => {
+  try {
+    const { user } = req;
+    const { authorization } = req.headers;
+    const token = authorization.split(" ")[1];
+
+    // Filter out the token from the tokens array
+    user.tokens = user.tokens.filter((t) => t.token !== token);
+
+    // Save the user document after removing the token
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      data: {
+        message: "Logout successfully",
+      },
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+
+/**
+ * @description update User password
+ * @param {id} req
+ * @method put
+ * @route /users/changePassword
+ * @access private
+ */
+exports.changePassword = asyncHandler(async (req, res, next) => {
+  const { currentPassword, newPassword , confirmPassword } = req.body;
+  const user = await User.findById(req.user._id);
+  const isMatch = await bcrypt.compare(currentPassword, user.password);
+  // console.log(isMatch);
+  if (!isMatch) {
+    return res.status(200).json({
+      message: `current password is incorrect`,
+    });
+  }
+
+  if (newPassword !== confirmPassword) {
+    return next(new ErrorHandler(`password not match`, 400))
+  }
+  const docs = await User.findByIdAndUpdate(
+    req.params.id,
+    {
+      password: await bcrypt.hash(newPassword, 10),
+      passwordChangedAt: Date.now(),
+    },
+    {
+      new: true,
+    }
+  );
+
+  if (!docs) {
+    return next(new ErrorHandler(`user not found`, 404));
+  }
+
+  await docs.save();
+  return res.status(200).json({
+    message: `password updated successfully`,
+    data: docs,
   });
 });
 
-/**
- * @description Login User
- * @method POST
- * @route /user/login
- * @access Public
- */
-const login = asyncHandler(async (req, res) => {
-  const { error } = validatelogin(req.body);
-  if (error) return res.status(400).json({ message: error.message });
-
-  const user = await User.findOne({ email: req.body.email });
-  if (!user)
-    return res.status(400).json({ message: "Invalid Email or Password" });
-
-  const isMatch = await bcrypt.compare(req.body.password, user.password);
-  if (!isMatch) return res.status(400).json({ message: "Invalid Password" });
-
-  const token = user.generateAuthToken();
-  res.status(200).json({ access_token: token, user: user });
+exports.getMe = asyncHandler(async (req, res, next) => {
+  // console.log(req.user);
+  req.params.id = req.user._id.toString();
+  next();
 });
-
-module.exports = { register, login };

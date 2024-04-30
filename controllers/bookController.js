@@ -1,90 +1,78 @@
-const { Book, validateUpdate, validateInsertBook } = require("../models/Book");
-const asyncHandler = require("express-async-handler");
+const {
+  uploadSingleImage,
+  resizeImage,
+  uploadPDF,
+} = require("../middlewares/uploadImageMiddleware");
+const { Book } = require("../models/Book");
+const {
+  deleteOne,
+  updateOne,
+  getOne,
+  createOne,
+  getAll,
+  search,
+} = require("./factory");
+
+
+// Image upload
+exports.upload = uploadSingleImage("cover");
+
+const arr = ["books", "book", "jpeg", 700, 800, 95];
+exports.resizeImage = resizeImage(arr);
+// exports.uploadPDF = uploadPDF();
 
 /**
- * @description Get all books
- * @route  /books
- * @method GET
+ * @description get all Books
+ * @route api/Books || api/:categoryId/Books
+ * @method get
  * @access public
  */
-const getAllBook = asyncHandler(async (req, res) => {
-  try {
-    const pageNumber = req.query.pageNumber || 1;
-    const number = 5;
-    const min = req.query.min || 0;
-    const max = req.query.max || Number.MAX_VALUE;
-    const books = await Book.find({ price: { $lte: max, $gte: min } })
-      .skip((pageNumber - 1) * number)
-      .limit(number);
-    res.json({ data: { books } });
-  } catch (err) {
-    console.log("err", err);
-  }
-});
+exports.getBooks = getAll(Book);
+
 
 /**
- * @description Get single book
- * @route  /books/:id
- * @method GET/post
- * @access public
- */
-const getBookById = asyncHandler(async (req, res) => {
-  const book = await Book.findById(req.params.id);
-  if (!book) {
-    return res.status(404).json({ message: "Book not found" });
-  }
-  res.json({ data: book });
-});
-
-/**
- * @description Add new book
- * @route books/
+ * @description create new Books
+ * @param {name} req
  * @method post
- * @access public
+ * @route api/Books
+ * @access private
  */
-const createBook = asyncHandler(async (req, res) => {
-  const { error } = validateInsertBook(req.body);
-  if (error) return res.status(400).json(error.message);
-  const book = new Book(req.body);
-  const result = await book.save();
-  res.status(200).json({ data: { result } });
-});
+exports.createBook = createOne(Book);
 
 /**
- * @decsription update
- *  @route /books/:id
- * @method PUT
+ * @description get Book
+ * @param {id} req
+ * @method get
+ * @route api/Books/:id
  * @access public
  */
-const updateBook = asyncHandler(async (req, res) => {
-  const { error } = validateUpdate(req.body);
-  if (error) return res.status(400).json(error.message);
-  const book = await Book.findByIdAndUpdate(req.params.id, req.body, {
-    new: true,
-  });
-  if (!book) return res.status(404).send("book not found");
-  res.json({ message: " book has been update " });
-});
+exports.getBook = getOne(Book, "reviews");
 
 /**
- * @description delete
+ * @description update Book
+ * @param {id} req
+ * @method put
+ * @route api/Books/:id
+ * @access public
+ */
+exports.updateBook = updateOne(Book);
+
+/**
+ * @description delete Book
+ * @param {id} req
  * @method delete
+ * @route api/Books/:id
  * @access public
- * @route /book/:id
  */
-const deleteBook = asyncHandler(async (req, res) => {
-  let book = await Book.findById(req.params.id);
-  if (!book) return res.status(404).json({ message: "book not found" });
-  if (book.author.toString() != req.user._id)
-    return res.status(401).json({ message: "you are not authorized" });
-  book = await Book.findByIdAndDelete(req.params.id);
-  if (!book) return res.status(404).json({ message: "book not found" });
-  res.json({ message: "book has been deleted" });
-});
-module.exports = {
-  getAllBook,
-  getBookById,
-  createBook,
-  updateBook,
-  deleteBook,
-};
+exports.deleteBook = deleteOne(Book);
+
+/**
+ * @description search Book
+ * @param {keyword} req
+ * @method get
+ *@route api/Books/search
+ * @access public
+ */
+
+exports.searchBook = search(Book);
+

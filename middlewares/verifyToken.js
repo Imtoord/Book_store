@@ -1,37 +1,60 @@
 const jwt = require("jsonwebtoken");
+const asyncHandler = require("express-async-handler");
+const { ErrorHandler } = require("../utils/errorHandler");
+const { User } = require("../models/User");
 
-const verifyToken = (req, res, next) => {
-    const authHeader = req.headers.token;
-    if (authHeader) {
-        const token = authHeader
-        jwt.verify(token, process.env.JWT_SECRET_KEY, (err, user) => {
-            if (err) res.status(403).json("Token is not valid");
-            req.user = user;
-            next();
-        })
-    }else{
-        return res.status(401).json("You are not authenticated");
+const verifyToken = async (req, res, next) => {
+  try {
+    // 1) check if token exist
+    const { authorization } = req.headers;
+    if (!authorization.startsWith("Bearer") || !authorization) {
+      next(new ErrorHandler("Please login to access this resource", 401));
     }
+    const token = authorization.split(" ")[1];
+    // Breare token
+
+    // 2) verify token
+    const decoded = await jwt.verify(token, process.env.JWT_SECRET_KEY);
+    // console.log(decoded);
+
+    // 3) ckeck if user exist
+    const user = await User.findOne({ _id: decoded.id });
+    if (!user) {
+      next(new ErrorHandler("User not found......", 404));
+    }
+    // console.log(token);
+
+    //4) ckeck if user logged out
+    const chackToken = user.tokens.find((t) => t.token === token); // tokens =[token]
+    // console.log(chackToken);
+    if (!chackToken) {
+      next(new ErrorHandler("User not found..&&&", 404));
+    }
+
+    // 5) check if user change password // tokens = [t1, t2]
+    if (user.passwordChangedAt) {
+      const pass = parseInt(user.passwordChangedAt.getTime() / 1000, 10);
+      if (pass > decoded.iat) {
+        // clean tokens
+        user.tokens = []; 
+        await user.save();
+        next(new ErrorHandler("User recently changed password plz login", 401));
+      }
+    }
+    req.user = user;
+    next();
+  } catch (err) {
+    next(err);
+  }
 };
 
-const verifyTokenAndAdmin = (req, res, next) => {
-    verifyToken(req, res, () => {
-        if (req.user.isAdmin) {
-            next();
-        } else {
-            res.status(403).json("You are not allowed to do that, only admin");
-        }
-    });
-};
+const verifyTokenAndAdmin = asyncHandler((req, res, next) => {
+  // console.log(req.user);
+  if (req.user.isAdmin) {
+    console.log("..............///");
+    return next();
+  }
+  next(new ErrorHandler("You are not allwoed to access this route", 403));
+});
 
-const verifyTokenAndAuthorization = (req, res, next) => {
-    verifyToken(req, res, () => {
-        if (req.user._id === req.params.id || req.user.isAdmin) {
-            next();
-        } else {
-            res.status(403).json("You are not allowed to do that");
-        }
-    });
-};
-
-module.exports = { verifyToken, verifyTokenAndAuthorization, verifyTokenAndAdmin, verifyToken };
+module.exports = { verifyTokenAndAdmin, verifyToken };

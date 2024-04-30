@@ -1,19 +1,31 @@
 const express = require("express");
 const router = express.Router();
 const {
-    verifyTokenAndAuthorization,
-    verifyTokenAndAdmin,
-    verifyToken,
+  verifyTokenAndAdmin,
+  verifyToken,
 } = require("../middlewares/verifyToken");
 const {
-    getAllBook,
-    getBookById,
-    createBook,
-    updateBook,
-    deleteBook,
+  getBook,
+  getBooks,
+  createBook,
+  updateBook,
+  deleteBook,
+  upload,
+  resizeImage,
+  // uploadPDF,
 } = require("../controllers/bookController");
+const review = require("./review");
+router.use("/:bookId/reviews", review);
 
-router.route('/').get(verifyToken,getAllBook).post(createBook);
-router.route('/:id').get(verifyToken, getBookById).put(verifyTokenAndAuthorization, updateBook).delete(verifyToken,deleteBook);
+
+
+router.route("/").get(getBooks);
+router.route("/:id").get(getBook);
+
+
+router.use(verifyToken, verifyTokenAndAdmin);
+
+router.route("/").post(upload, resizeImage, createBook);
+router.route("/:id").put(updateBook).delete(deleteBook);
 
 module.exports = router;
