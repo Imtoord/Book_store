@@ -19,7 +19,7 @@ if (process.env.NODE_ENV === "development") {
   app.use(morgan("dev"));
 }
 
-app.use("/", (req, res, next) => {
+app.get("/", (req, res, next) => {
   res.status(200).json({
     success: true,
     message: "Hello world",
