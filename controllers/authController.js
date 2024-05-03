@@ -23,7 +23,7 @@ exports.resizeImage = resizeImage(arr);
  */
 exports.signup = asyncHandler(async (req, res, next) => {
   try {
-    const { username, email, password } = req.body;
+    let { username, email, password } = req.body;
     let { image } = req.body;
 
     const emailx = await User.findOne({ email });
@@ -35,6 +35,9 @@ exports.signup = asyncHandler(async (req, res, next) => {
       image = `${process.env.HOST}/uploads/users/av.png`;
     }
 
+    const saltRounds = 10;
+    password = await bcrypt.hashSync(password, saltRounds);
+
     const doc = await User.create({ username, email, password, image });
     const userJwt = await doc.generateAuthToken();
 
@@ -44,7 +47,7 @@ exports.signup = asyncHandler(async (req, res, next) => {
     res.status(201).json({
       success: true,
       data: {
-        user: doc,
+        user: userData,
         token: userJwt,
       },
     });
@@ -65,7 +68,7 @@ exports.login = asyncHandler(async (req, res, next) => {
     if (email) {
       user = await User.findOne({ email });
     } else {
-      return next(new ErrorHandler("Username or email is required", 400));
+      return next(new ErrorHandler(" email is required", 400));
     }
 
     if (!user) {
@@ -81,11 +84,12 @@ exports.login = asyncHandler(async (req, res, next) => {
     user.tokens.push({ token: userJwt });
     await user.save();
     // remove password form res
-    // const { password: pass, ...userData } = user._doc;
+    const { password: pass, tokens, ...userData } = doc._doc;
+
     return res.status(200).json({
       success: true,
       data: {
-        user: user,
+        user: userData,
         token: userJwt,
       },
     });
@@ -122,7 +126,6 @@ exports.logout = asyncHandler(async (req, res, next) => {
   }
 });
 
-
 /**
  * @description update User password
  * @param {id} req
@@ -131,7 +134,7 @@ exports.logout = asyncHandler(async (req, res, next) => {
  * @access private
  */
 exports.changePassword = asyncHandler(async (req, res, next) => {
-  const { currentPassword, newPassword , confirmPassword } = req.body;
+  const { currentPassword, newPassword, confirmPassword } = req.body;
   const user = await User.findById(req.user._id);
   const isMatch = await bcrypt.compare(currentPassword, user.password);
   // console.log(isMatch);
@@ -142,7 +145,7 @@ exports.changePassword = asyncHandler(async (req, res, next) => {
   }
 
   if (newPassword !== confirmPassword) {
-    return next(new ErrorHandler(`password not match`, 400))
+    return next(new ErrorHandler(`password not match`, 400));
   }
   const docs = await User.findByIdAndUpdate(
     req.params.id,

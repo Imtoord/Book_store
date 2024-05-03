@@ -1,4 +1,5 @@
 const { User } = require("../models/User");
+const { ErrorHandler } = require("../utils/errorHandler");
 
 const {
   getAll,
@@ -48,3 +49,16 @@ exports.deleteUser = deleteOne(User);
  */
 exports.createUser = createOne(User);
 
+exports.isExist = async (req, res, next) => {
+  let user = await User.findOne({ email: req.body.email });
+  if (user) {
+    return next(
+      new ErrorHandler(
+        "Email is already in use. Please try with a different email address.",
+        400
+      )
+    );
+  }
+  req.body.user = req.user._id.toString();
+  next();
+};

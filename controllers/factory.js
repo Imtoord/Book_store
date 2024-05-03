@@ -7,13 +7,12 @@ const ApiFeatures = require("../utils/apiFeatuers");
 // delete
 exports.deleteOne = (Model) =>
   asyncHandler(async (req, res, next) => {
-
-    const docs = await User.findByIdAndDelete(req.params.id);
+    const docs = await Model.findByIdAndDelete(req.params.id);
 
     if (!docs) {
       return next(new ErrorHandler(`${Model.name} not found`, 404));
     }
-    await docs.remove()
+    // await docs.remove()
     return res.status(203).json({
       message: `${Model.name} deleted successfully`,
     });
@@ -48,9 +47,6 @@ exports.getOne = (Model) =>
 // create One
 exports.createOne = (Model) =>
   asyncHandler(async (req, res, next) => {
-    if (req.params.categoryId) {
-      req.body.category = req.params.categoryId;
-    }
     const docs = await new Model(req.body);
     await docs.save();
     return res.status(201).json({
@@ -60,7 +56,7 @@ exports.createOne = (Model) =>
   });
 
 // get all
-exports.getAll = (Model, modelname = "") =>
+exports.getAll = (Model) =>
   asyncHandler(async (req, res) => {
     let filterobjx = {};
     if (req.filterobj) {
@@ -68,13 +64,13 @@ exports.getAll = (Model, modelname = "") =>
     }
 
     // build query
-    const documentCounet = await Model.countDocuments();
+    const documentCounet = await Model.countDocuments(); // 10
     const docs = new ApiFeatures(Model.find(filterobjx), req.query)
       .sort()
       .Pagination(documentCounet)
       .fields()
       .Filter()
-      .search(modelname);
+      .search();
     // execute query
     const { mongoQuery, pagination } = docs;
     const results = await mongoQuery;

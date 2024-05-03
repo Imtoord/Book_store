@@ -1,8 +1,4 @@
-const {
-  uploadSingleImage,
-  resizeImage,
-  uploadPDF,
-} = require("../middlewares/uploadImageMiddleware");
+const { uploadBook } = require("../middlewares/uploadImageMiddleware");
 const { Book } = require("../models/Book");
 const {
   deleteOne,
@@ -13,13 +9,16 @@ const {
   search,
 } = require("./factory");
 
+// upload book
+exports.uploadBook = uploadBook;
 
-// Image upload
-exports.upload = uploadSingleImage("cover");
-
-const arr = ["books", "book", "jpeg", 700, 800, 95];
-exports.resizeImage = resizeImage(arr);
-// exports.uploadPDF = uploadPDF();
+exports.addPath = (req, res, next) => {
+  req.body.cover =
+    process.env.HOST + "/" + req.files["cover"][0].path.replace(/\\/g, "/"); // Replace backslashes with forward slashes
+  req.body.pdf =
+    process.env.HOST + "/" + req.files["pdf"][0].path.replace(/\\/g, "/"); // Replace backslashes with forward slashes
+  next();
+};
 
 /**
  * @description get all Books
@@ -28,7 +27,6 @@ exports.resizeImage = resizeImage(arr);
  * @access public
  */
 exports.getBooks = getAll(Book);
-
 
 /**
  * @description create new Books
@@ -75,4 +73,3 @@ exports.deleteBook = deleteOne(Book);
  */
 
 exports.searchBook = search(Book);
-

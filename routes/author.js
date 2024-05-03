@@ -5,14 +5,14 @@ const {
   verifyToken,
 } = require("../middlewares/verifyToken");
 const {
-    getAllAuthors,
-    createAuthor,
-    getSingleAuthor,
-    updateAuthor,
-    deleteAuthor,
+  getAllAuthors,
+  createAuthor,
+  getSingleAuthor,
+  updateAuthor,
+  deleteAuthor,
 } = require("../controllers/authorController");
 
-router.use(verifyToken,verifyTokenAndAdmin); //admin
+// router.use(verifyToken,verifyTokenAndAdmin); //admin
 
 router.route("/").get(getAllAuthors).post(createAuthor);
 

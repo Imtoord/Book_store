@@ -29,9 +29,9 @@ const BookSchema = new Schema(
       type: String, // img
       required: true,
     },
-    Book_link: {
+    pdf: {
       type: String, 
-      required: true,
+      // required: true,
     },
     averageRating: {
       type: Number,

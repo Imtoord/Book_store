@@ -1,3 +1,5 @@
+const path = require("path");
+
 const multer = require("multer");
 const sharp = require("sharp");
 const asyncHandler = require("express-async-handler");
@@ -43,28 +45,34 @@ exports.resizeImage = (arr) =>
 
 
 
-// Configure multer for PDF upload
-const pdfStorage = multer.diskStorage({
+const storagex = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, "uploads/");
+    cb(null, "uploads/books"); // Destination folder for uploaded files
   },
   filename: function (req, file, cb) {
-    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-    const fileName = uniqueSuffix + "-" + file.originalname;
-    req.body.Book_link = fileName;
-    cb(null, fileName);
+    const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
+
+    cb(null, uniqueSuffix + path.extname(file.originalname)); // File name will be a unique suffix + original file extension
   },
 });
 
-const pdfFileFilter = (req, file, cb) => {
-  if (file.mimetype === "application/pdf") {
-    cb(null, true);
+const fileFilterx = function (req, file, cb) {
+  if (
+    file.mimetype.startsWith("image/") ||
+    file.mimetype === "application/pdf"
+  ) {
+    cb(null, true); 
   } else {
-    cb(new Error("Only PDF files are allowed"), false);
+    cb(new Error("Only images and PDFs are allowed!"), false); 
   }
 };
 
-exports.uploadPDF = multer({
-  storage: pdfStorage,
-  fileFilter: pdfFileFilter,
-}).single("Book_link");
+const upload = multer({
+  storage: storagex,
+  fileFilter: fileFilterx,
+}).fields([
+  { name: "cover", maxCount: 1 },
+  { name: "pdf", maxCount: 1 },
+]); // Accept both image and PDF files
+
+exports.uploadBook = upload;
