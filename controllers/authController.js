@@ -28,7 +28,7 @@ exports.signup = asyncHandler(async (req, res, next) => {
 
     const emailx = await User.findOne({ email });
     if (emailx) {
-      next(new ErrorHandler("email already exists", 400));
+      return next(new ErrorHandler("email already exists", 400));
     }
 
     if (!image) {
