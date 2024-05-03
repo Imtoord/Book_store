@@ -15,7 +15,7 @@ const {
 
 
 
-// router.use(verifyToken, verifyTokenAndAdmin);// admin
+router.use(verifyToken, verifyTokenAndAdmin);// admin
 
 router.route("/").get(getAllUsers).post(isExist, createUser);
 router.route("/:id").get(getSingleUser).delete(deleteUser).put(updateUser);

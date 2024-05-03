@@ -21,7 +21,7 @@ router.use("/:bookId/reviews", review);
 router.route("/").get(getBooks);
 router.route("/:id").get(getBook);
 
-// router.use(verifyToken, verifyTokenAndAdmin);
+router.use(verifyToken, verifyTokenAndAdmin);
 
 router.route("/").post(
   uploadBook,

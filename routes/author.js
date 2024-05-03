@@ -12,7 +12,7 @@ const {
   deleteAuthor,
 } = require("../controllers/authorController");
 
-// router.use(verifyToken,verifyTokenAndAdmin); //admin
+router.use(verifyToken,verifyTokenAndAdmin); //admin
 
 router.route("/").get(getAllAuthors).post(createAuthor);
 
