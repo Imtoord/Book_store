@@ -25,12 +25,12 @@ const BookSchema = new Schema(
       max: 1000,
     },
     cover: {
-      type: String, // img
+      type: String, 
       required: true,
     },
     pdf: {
       type: String, 
-      // required: true,
+      required: true,
     },
     averageRating: {
       type: Number,
