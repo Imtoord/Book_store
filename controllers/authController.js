@@ -64,18 +64,19 @@ exports.signup = asyncHandler(async (req, res, next) => {
 exports.login = asyncHandler(async (req, res, next) => {
   try {
     const { email, password } = req.body;
-    let user;
-    if (email) {
-      user = await User.findOne({ email });
-    } else {
-      return next(new ErrorHandler(" email is required", 400));
+
+    if (!email) {
+      return next(new ErrorHandler("Email is required", 400));
     }
+
+    const user = await User.findOne({ email });
 
     if (!user) {
       return next(new ErrorHandler("User not found", 404));
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
+
     if (!isMatch) {
       return next(new ErrorHandler("Invalid password", 401));
     }
@@ -83,8 +84,8 @@ exports.login = asyncHandler(async (req, res, next) => {
     const userJwt = await user.generateAuthToken();
     user.tokens.push({ token: userJwt });
     await user.save();
-    // remove password form res
-    const { password: pass, tokens, ...userData } = doc._doc;
+
+    const { password: pass, tokens, ...userData } = user._doc;
 
     return res.status(200).json({
       success: true,
@@ -137,7 +138,7 @@ exports.changePassword = asyncHandler(async (req, res, next) => {
   const { currentPassword, newPassword, confirmPassword } = req.body;
   const user = await User.findById(req.user._id);
   const isMatch = await bcrypt.compare(currentPassword, user.password);
-  // console.log(isMatch);
+
   if (!isMatch) {
     return res.status(200).json({
       message: `current password is incorrect`,
@@ -163,9 +164,13 @@ exports.changePassword = asyncHandler(async (req, res, next) => {
   }
 
   await docs.save();
+  const { password: pass, tokens, ...userData } = user._doc;
+
   return res.status(200).json({
-    message: `password updated successfully`,
-    data: docs,
+    success: true,
+    data: {
+      user: userData,
+    },
   });
 });
 
@@ -174,3 +179,13 @@ exports.getMe = asyncHandler(async (req, res, next) => {
   req.params.id = req.user._id.toString();
   next();
 });
+
+exports.ifEmailExist = asyncHandler(async (req, res, next) => {
+  if (req.body.email) {
+    const existingUser = await User.findOne({ email: req.body.email });
+    if (existingUser) {
+      return next(new ErrorHandler("Email already exists", 400));
+    }
+  }
+  next();
+})

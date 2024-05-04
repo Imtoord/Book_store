@@ -3,12 +3,14 @@ const asyncHandler = require("express-async-handler");
 const { ErrorHandler } = require("../utils/errorHandler");
 const { User } = require("../models/User");
 
-const verifyToken = async (req, res, next) => {
+const verifyToken = asyncHandler(async (req, res, next) => {
   try {
     // 1) check if token exist
     const { authorization } = req.headers;
-    if (!authorization.startsWith("Bearer") || !authorization) {
-      next(new ErrorHandler("Please login to access this resource", 401));
+    if (!authorization || !authorization.startsWith("Bearer")) {
+      return next(
+        new ErrorHandler("Please login to access this resource", 401)
+      );
     }
     const token = authorization.split(" ")[1];
     // Breare token
@@ -17,28 +19,32 @@ const verifyToken = async (req, res, next) => {
     const decoded = await jwt.verify(token, process.env.JWT_SECRET_KEY);
     // console.log(decoded);
 
-    // 3) ckeck if user exist
+    // 3) check if user exists
     const user = await User.findOne({ _id: decoded.id });
     if (!user) {
-      next(new ErrorHandler("User not found......", 404));
+      return next(new ErrorHandler("User not found", 404));
     }
-    // console.log(token);
 
-    //4) ckeck if user logged out
+    //4) check if user logged out
     const chackToken = user.tokens.find((t) => t.token === token); // tokens =[token]
-    // console.log(chackToken);
+    console.log(chackToken);
     if (!chackToken) {
-      next(new ErrorHandler("User not found..&&&", 404));
+      return next(new ErrorHandler("User not found", 404));
     }
 
-    // 5) check if user change password // tokens = [t1, t2]
+    // 5) check if user changed password
     if (user.passwordChangedAt) {
       const pass = parseInt(user.passwordChangedAt.getTime() / 1000, 10);
       if (pass > decoded.iat) {
         // clean tokens
-        user.tokens = []; 
+        user.tokens = [];
         await user.save();
-        next(new ErrorHandler("User recently changed password plz login", 401));
+        return next(
+          new ErrorHandler(
+            "User recently changed password. Please login again",
+            401
+          )
+        );
       }
     }
     req.user = user;
@@ -46,15 +52,19 @@ const verifyToken = async (req, res, next) => {
   } catch (err) {
     next(err);
   }
-};
+});
+
 
 const verifyTokenAndAdmin = asyncHandler((req, res, next) => {
   // console.log(req.user);
   if (req.user.isAdmin) {
     console.log("..............///");
-    return next();
+    next();
+  } else {
+    return next(
+      new ErrorHandler("You are not allwoed to access this route", 403)
+    );
   }
-  next(new ErrorHandler("You are not allwoed to access this route", 403));
 });
 
 module.exports = { verifyTokenAndAdmin, verifyToken };

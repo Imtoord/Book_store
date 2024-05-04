@@ -38,7 +38,7 @@ app.all("*", (req, res, next) => {
   );
 });
 
-// global Error..
+// global Error
 app.use(globalError); //
 
 // app prot & app listen

@@ -3,7 +3,6 @@ const asyncHandler = require("express-async-handler");
 const { ErrorHandler } = require("../utils/errorHandler");
 const ApiFeatures = require("../utils/apiFeatuers");
 
-
 // delete
 exports.deleteOne = (Model) =>
   asyncHandler(async (req, res, next) => {
@@ -41,7 +40,15 @@ exports.getOne = (Model) =>
     if (!docs) {
       return next(new ErrorHandler(`${Model.name} not found ;(`, 404));
     }
-    return res.status(200).json({ data: docs });
+
+    const { password: pass, tokens, ...userData } = docs._doc;
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        user: userData,
+      },
+    });
   });
 
 // create One

@@ -11,6 +11,7 @@ const {
   logout,
   upload,
   resizeImage,
+  ifEmailExist,
 } = require("../controllers/authController");
 const userController = require("../controllers/userController");
 
@@ -21,6 +22,6 @@ router.use(verifyToken);
 
 router.post("/logout", logout);
 router.post("/changePassword", getMe, changePassword);
-router.put("/updateMy", getMe, userController.updateUser);
+router.put("/updateMy", getMe,ifEmailExist,  userController.updateUser);
 router.get("/getmy", getMe, userController.getSingleUser);
 module.exports = router;

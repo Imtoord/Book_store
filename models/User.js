@@ -2,7 +2,6 @@ const mongoose = require("mongoose");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 
-
 const Schema = mongoose.Schema;
 
 const UserSchema = new Schema({
@@ -37,18 +36,17 @@ UserSchema.methods.generateAuthToken = function () {
   return jwt.sign({ id: this._id }, process.env.JWT_SECRET_KEY);
 };
 
-UserSchema.pre("save", async function (next) {
-
-  if(!this.isModified('password')){
-    next()
+// not show password and tokens
+UserSchema.pre(/^find/, function (next) {
+  if (!this._conditions._id) {
+    // Check if _id is not specified (to exclude findOne)
+    this.select("-password -tokens");
   }
-  this.password = await bcrypt.hashSync(this.password, 10);
-
+  next();
 });
-
 
 const User = mongoose.model("User", UserSchema);
 
 module.exports = {
-  User
+  User,
 };
