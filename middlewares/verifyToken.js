@@ -27,7 +27,9 @@ const verifyToken = asyncHandler(async (req, res, next) => {
 
     //4) check if user logged out
     const chackToken = user.tokens.find((t) => t.token === token); // tokens =[token]
-    console.log(chackToken);
+    // console.log(user);
+    // console.log(token);
+    // console.log(decoded);
     if (!chackToken) {
       return next(new ErrorHandler("User not found", 404));
     }

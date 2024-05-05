@@ -50,13 +50,15 @@ exports.signup = asyncHandler(async (req, res, next) => {
 
   // Generate JWT token
   const token = await newUser.generateAuthToken();
-  user.tokens.push({ token: userJwt });
-  await user.save();
+  newUser.tokens.push({ token: token });
+  await newUser.save();
+  const { password: pass, tokens, ...userData } = newUser._doc;
+
   // Response
   res.status(201).json({
     success: true,
     data: {
-      user: newUser,
+      user: userData,
       token,
     },
   });

@@ -33,8 +33,11 @@ const UserSchema = new Schema({
 
 // user.generateAuthToken()
 UserSchema.methods.generateAuthToken = function () {
-  return jwt.sign({ id: this._id }, process.env.JWT_SECRET_KEY);
+  return jwt.sign({ id: this._id }, process.env.JWT_SECRET_KEY, {
+    expiresIn: "30d",
+  });
 };
+
 
 // not show password and tokens
 // UserSchema.pre(/^find/, function (next) {
