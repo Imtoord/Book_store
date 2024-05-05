@@ -22,38 +22,43 @@ exports.resizeImage = resizeImage(arr);
  * @access public
  */
 exports.signup = asyncHandler(async (req, res, next) => {
-  try {
-    let { username, email, password } = req.body;
-    let { image } = req.body;
-
-    const emailx = await User.findOne({ email });
-    if (emailx) {
-      return next(new ErrorHandler("email already exists", 400));
-    }
-
-    if (!image) {
-      image = `${process.env.HOST}/uploads/users/av.png`;
-    }
-
-    const saltRounds = 10;
-    password = await bcrypt.hashSync(password, saltRounds);
-
-    const doc = await User.create({ username, email, password, image });
-    const userJwt = await doc.generateAuthToken();
-
-    doc.tokens.push({ token: userJwt });
-    await doc.save();
-    const { password: pass, tokens, ...userData } = doc._doc;
-    res.status(201).json({
-      success: true,
-      data: {
-        user: userData,
-        token: userJwt,
-      },
-    });
-  } catch (err) {
-    next(err);
+  // Validate request body
+  const { username, email, password, image } = req.body;
+  if (!username || !email || !password) {
+    return next(
+      new ErrorHandler("Username, email, and password are required", 400)
+    );
   }
+
+  // Check if email already exists
+  const emailExists = await User.findOne({ email });
+  if (emailExists) {
+    return next(new ErrorHandler("Email already exists", 400));
+  }
+
+  // Hash password asynchronously
+  const saltRounds = 10;
+  const hashedPassword = await bcrypt.hash(password, saltRounds);
+
+  // Create new user
+  const newUser = await User.create({
+    username,
+    email,
+    password: hashedPassword,
+    image,
+  });
+
+  // Generate JWT token
+  const token = await newUser.generateAuthToken();
+
+  // Response
+  res.status(201).json({
+    success: true,
+    data: {
+      user: newUser,
+      token,
+    },
+  });
 });
 
 /**
@@ -65,8 +70,8 @@ exports.login = asyncHandler(async (req, res, next) => {
   try {
     const { email, password } = req.body;
 
-    if (!email) {
-      return next(new ErrorHandler("Email is required", 400));
+    if (!email || !password) {
+      return next(new ErrorHandler("Email and password are required", 400));
     }
 
     const user = await User.findOne({ email });
@@ -75,7 +80,12 @@ exports.login = asyncHandler(async (req, res, next) => {
       return next(new ErrorHandler("User not found", 404));
     }
 
-    const isMatch = await bcrypt.compare(password, user.password);
+    // if (!user.password) {
+    //   return next(new ErrorHandler("User password not found", 500));
+    // }
+
+
+    const isMatch =  await bcrypt.compare(password, user.password);
 
     if (!isMatch) {
       return next(new ErrorHandler("Invalid password", 401));
@@ -188,4 +198,4 @@ exports.ifEmailExist = asyncHandler(async (req, res, next) => {
     }
   }
   next();
-})
+});

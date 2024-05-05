@@ -37,13 +37,13 @@ UserSchema.methods.generateAuthToken = function () {
 };
 
 // not show password and tokens
-UserSchema.pre(/^find/, function (next) {
-  if (!this._conditions._id) {
-    // Check if _id is not specified (to exclude findOne)
-    this.select("-password -tokens");
-  }
-  next();
-});
+// UserSchema.pre(/^find/, function (next) {
+//   if (!this._conditions._id) {
+//     // Check if _id is not specified (to exclude findOne)
+//     this.select("-tokens");
+//   }
+//   next();
+// });
 
 const User = mongoose.model("User", UserSchema);
 
