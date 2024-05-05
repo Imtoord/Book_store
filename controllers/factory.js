@@ -26,10 +26,12 @@ exports.updateOne = (Model) =>
     if (!docs) {
       return next(new ErrorHandler(`${Model.name} not found`, 404));
     }
+    const { password: pass, tokens, ...userData } = docs._doc;
+
     await docs.save();
     return res.status(200).json({
       message: `${Model.name}  updated successfully`,
-      data: docs,
+      data: userData,
     });
   });
 
