@@ -50,7 +50,8 @@ exports.signup = asyncHandler(async (req, res, next) => {
 
   // Generate JWT token
   const token = await newUser.generateAuthToken();
-
+  user.tokens.push({ token: userJwt });
+  await user.save();
   // Response
   res.status(201).json({
     success: true,
@@ -80,12 +81,7 @@ exports.login = asyncHandler(async (req, res, next) => {
       return next(new ErrorHandler("User not found", 404));
     }
 
-    // if (!user.password) {
-    //   return next(new ErrorHandler("User password not found", 500));
-    // }
-
-
-    const isMatch =  await bcrypt.compare(password, user.password);
+    const isMatch = await bcrypt.compare(password, user.password);
 
     if (!isMatch) {
       return next(new ErrorHandler("Invalid password", 401));
