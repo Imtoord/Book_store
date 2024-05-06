@@ -61,16 +61,13 @@ class ApiFeatures {
     search(modelName) {
         
         if (this.query.keyword) {
-            if (modelName === 'Product') {
+
                 this.mongoQuery = this.mongoQuery.find({
                     $or: [
                         { title: { $regex: this.query.keyword, $options: 'i' } },
                         { description: { $regex: this.query.keyword, $options: 'i' } }
                     ]
                 })
-            } else {
-                this.mongoQuery = this.mongoQuery.find({ name: { $regex: this.query.keyword, $options: 'i' } })
-            }
             return this
         }
         return this

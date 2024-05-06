@@ -11,16 +11,6 @@ const {
   search,
 } = require("./factory");
 
-// upload book
-exports.uploadBook = uploadBook;
-
-exports.addPath = (req, res, next) => {
-  req.body.cover =
-    process.env.HOST + "/" + req.files["cover"][0].path.replace(/\\/g, "/"); // Replace backslashes with forward slashes
-  req.body.pdf =
-    process.env.HOST + "/" + req.files["pdf"][0].path.replace(/\\/g, "/"); // Replace backslashes with forward slashes
-  next();
-};
 
 /**
  * @description get all Books

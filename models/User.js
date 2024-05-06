@@ -27,7 +27,8 @@ const UserSchema = new Schema({
   image: {
     type: String,
   },
-  tokens: [{ token: { type: String, required: true } }], // [t1]
+  wishList: [{ type: Schema.Types.ObjectId, ref: "Book" }],
+  tokens: [{ token: { type: String, required: true } }],
   passwordChangedAt: { type: Date },
 });
 

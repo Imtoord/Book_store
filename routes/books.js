@@ -1,3 +1,4 @@
+const multer = require("multer");
 const express = require("express");
 const router = express.Router();
 
@@ -11,14 +12,11 @@ const {
   createBook,
   updateBook,
   deleteBook,
-  uploadBook,
-  addPath,
+  searchBook,
 } = require("../controllers/bookController");
 
 const review = require("./review");
 
-const { cloudinary } = require("../middlewares/uploadImageMiddleware");
-const multer = require("multer");
 
 // Configure Multer for handling file uploads
 const storage = multer.diskStorage({
@@ -32,6 +30,7 @@ const upload = multer({ storage: storage });
 
 router.use("/:bookId/reviews", review);
 
+router.route("/search").get(searchBook);
 router.route("/").get(getBooks);
 router.route("/:id").get(getBook);
 

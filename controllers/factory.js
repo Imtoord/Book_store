@@ -59,6 +59,7 @@ exports.createOne = (Model) =>
     const docs = await new Model(req.body);
     await docs.save();
     return res.status(201).json({
+      success: true,
       message: `${Model.name} create successfully`,
       data: docs,
     });
@@ -83,19 +84,30 @@ exports.getAll = (Model) =>
     // execute query
     const { mongoQuery, pagination } = docs;
     const results = await mongoQuery;
-    return res
-      .status(200)
-      .json({ results: results.length, pagination, data: results });
+    return res.status(200).json({
+      success: true,
+      results: results.length,
+      pagination,
+      data: results,
+    });
   });
 
+  
 exports.search = (Model) =>
   asyncHandler(async (req, res, next) => {
     const { keyword } = req.query;
-    const docs = await Model.find({
-      $or: [
-        { title: { $regex: keyword, $options: "i" } },
-        { description: { $regex: keyword, $options: "i" } },
-      ],
-    });
-    return res.status(200).json({ data: docs });
+    let docs = [];
+
+    if (keyword) {
+      docs = await Model.find({
+        $or: [
+          { title: { $regex: keyword, $options: "i" } }, // Perform case-insensitive search
+          { description: { $regex: keyword, $options: "i" } }, // Perform case-insensitive search
+        ],
+      });
+    }
+
+    return res
+      .status(200)
+      .json({ success: true, results: docs.length, data: docs });
   });
