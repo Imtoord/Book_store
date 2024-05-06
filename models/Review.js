@@ -38,35 +38,35 @@ reviewSchema.pre(/^find/, function (next) {
 });
 
 // Static method to calculate average rating and update book document
-reviewSchema.statics.updateBookStats = async function (bookId) {
-  const res = await this.aggregate([
-    {
-      $match: {
-        book: bookId
-      },
-    },
-    {
-      $group: {
-        _id: "book",
-        averageRating: { $avg: "$rating" },
-        count: { $sum: 1 },
-      },
-    },
-  ]);
+// reviewSchema.statics.updateBookStats = async function (bookId) {
+//   const res = await this.aggregate([
+//     {
+//       $match: {
+//         book: bookId
+//       },
+//     },
+//     {
+//       $group: {
+//         _id: "book",
+//         averageRating: { $avg: "$rating" },
+//         count: { $sum: 1 },
+//       },
+//     },
+//   ]);
 
-  console.log(res)
-  if (res.length > 0) {
-    await Book.findByIdAndUpdate(bookId, {
-      averageRating: res[0].averageRating,
-      reviewCount: res[0].count,
-    });
-  } else {
-    await Book.findByIdAndUpdate(bookId, {
-      averageRating: 0,
-      reviewCount: 0,
-    });
-  }
-};
+//   console.log(res)
+//   if (res.length > 0) {
+//     await Book.findByIdAndUpdate(bookId, {
+//       averageRating: res[0].averageRating,
+//       reviewCount: res[0].count,
+//     });
+//   } else {
+//     await Book.findByIdAndUpdate(bookId, {
+//       averageRating: 0,
+//       reviewCount: 0,
+//     });
+//   }
+// };
 
 // Post-save hook to update book stats after saving a review
 reviewSchema.post("save", async function () {

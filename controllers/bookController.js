@@ -1,6 +1,9 @@
 const { cloudinary } = require("../middlewares/uploadImageMiddleware");
+const asyncHandler = require("express-async-handler");
 
-const { uploadBook } = require("../middlewares/uploadImageMiddleware");
+const { User } = require("../models/User");
+const { ErrorHandler } = require("../utils/errorHandler");
+const ApiFeatures = require("../utils/apiFeatuers");
 const { Book } = require("../models/Book");
 const {
   deleteOne,
@@ -11,14 +14,59 @@ const {
   search,
 } = require("./factory");
 
-
 /**
  * @description get all Books
  * @route api/Books || api/:categoryId/Books
  * @method get
  * @access public
  */
-exports.getBooks = getAll(Book);
+exports.getBooks = asyncHandler(async (req, res) => {
+  let filterObjx = {};
+  if (req.filterobj) {
+    filterObjx = req.filterobj;
+  }
+
+  // Replace 'Model' with your actual model name
+  const documentCount = await Book.countDocuments(filterObjx); // Get count based on filters
+  const apiFeatures = new ApiFeatures(Book.find(filterObjx), req.query)
+    .sort()
+    .pagination(documentCount)
+    .fields()
+    .filter()
+    .search();
+
+  const { mongoQuery, pagination } = apiFeatures;
+  let results = await mongoQuery;
+
+  if (req.user && req.user._id) {
+    const user = await User.findById(req.user._id);
+    const wishList = user.wishList || []; // Ensure wishlist is an array
+    console.log(wishList);
+    // Add favorite status to each book
+    results = results.map((book) => {
+      return {
+        ...book.toObject(),
+        favorite: wishList.includes(book._id.toString()),
+      };
+    });
+  } else {
+    // If user is not logged in, set favorite status to false for all books
+    console.log("user is not logged");
+    results = results.map((book) => {
+      return {
+        ...book.toObject(),
+        favorite: false,
+      };
+    });
+  }
+
+  return res.status(200).json({
+    success: true,
+    results: results.length,
+    pagination,
+    data: results,
+  });
+});
 
 /**
  * @description create new Books
@@ -29,11 +77,12 @@ exports.getBooks = getAll(Book);
  */
 
 exports.createBook = async (req, res, next) => {
-  const { title, author, description, price } = req.body;
+  const { title, author, description, price, rating, new_price } = req.body;
+  // console.log(req.file);
   if (!req.file) {
     return res.status(400).json({
       success: false,
-      message: "Image file is required",
+      message: "cover file is required",
     });
   }
 
@@ -43,22 +92,18 @@ exports.createBook = async (req, res, next) => {
       console.log(err);
       return res.status(500).json({
         success: false,
-        message: "Error uploading image file",
+        message: "cover uploading image file",
       });
     }
-
-    // res.status(200).json({
-    //   success: true,
-    //   message: "Image uploaded successfully",
-    //   data: result,
-    // });
 
     const book = await Book.create({
       title,
       author,
       description,
       price,
+      new_price,
       cover: result.url,
+      rating,
     });
 
     await book.save();

@@ -77,19 +77,21 @@ exports.getAll = (Model) =>
     const documentCounet = await Model.countDocuments(); // 10
     const docs = new ApiFeatures(Model.find(filterobjx), req.query)
       .sort()
-      .Pagination(documentCounet)
+      .pagination(documentCounet)
       .fields()
-      .Filter()
+      .filter()
       .search();
     // execute query
     const { mongoQuery, pagination } = docs;
     const results = await mongoQuery;
-    return res.status(200).json({
-      success: true,
-      results: results.length,
-      pagination,
-      data: results,
-    });
+    const { Book } = Model;
+
+      return res.status(200).json({
+        success: true,
+        results: results.length,
+        pagination,
+        data: results,
+      });
   });
 
   

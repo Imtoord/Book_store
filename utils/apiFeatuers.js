@@ -4,7 +4,7 @@ class ApiFeatures {
         this.query = query
     }
 
-    Pagination(documentCount) {
+    pagination(documentCount) {
         const page = parseInt(this.query.page, 10) || 1;
         const limit = parseInt(this.query.limit, 10) || 5;
         const skip = (page - 1) * limit;
@@ -34,7 +34,7 @@ class ApiFeatures {
         return this
     }
 
-    Filter() {
+    filter() {
 
         let filterionObj = { ...this.query };
         const unarr = ['page', 'limit', 'sort', 'fields'];

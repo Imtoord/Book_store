@@ -3,6 +3,15 @@ const asyncHandler = require("express-async-handler");
 const { ErrorHandler } = require("../utils/errorHandler");
 const { User } = require("../models/User");
 
+const ifToken = asyncHandler(async (req, res, next) => {
+  const { authorization } = req.headers;
+  if (authorization) {
+    verifyToken(req, res, next);
+  } else {
+    next();
+  }
+});
+
 const verifyToken = asyncHandler(async (req, res, next) => {
   try {
     // 1) check if token exist
@@ -56,7 +65,6 @@ const verifyToken = asyncHandler(async (req, res, next) => {
   }
 });
 
-
 const verifyTokenAndAdmin = asyncHandler((req, res, next) => {
   // console.log(req.user);
   if (req.user.isAdmin) {
@@ -69,4 +77,4 @@ const verifyTokenAndAdmin = asyncHandler((req, res, next) => {
   }
 });
 
-module.exports = { verifyTokenAndAdmin, verifyToken };
+module.exports = { verifyTokenAndAdmin, verifyToken, ifToken };

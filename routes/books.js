@@ -5,6 +5,7 @@ const router = express.Router();
 const {
   verifyTokenAndAdmin,
   verifyToken,
+  ifToken,
 } = require("../middlewares/verifyToken");
 const {
   getBook,
@@ -17,7 +18,6 @@ const {
 
 const review = require("./review");
 
-
 // Configure Multer for handling file uploads
 const storage = multer.diskStorage({
   filename: function (req, file, cb) {
@@ -27,16 +27,14 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage });
 
-
+router.use(ifToken);
 router.use("/:bookId/reviews", review);
-
 router.route("/search").get(searchBook);
 router.route("/").get(getBooks);
-router.route("/:id").get(getBook);
+router.route("/:id").get(getBook); 
 
-router.use(verifyToken, verifyTokenAndAdmin);
-
-router.route("/").post(upload.single("cover"), createBook);
-router.route("/:id").put(updateBook).delete(deleteBook);
+router.use(verifyToken, verifyTokenAndAdmin); 
+router.route("/").post(upload.single("cover"), createBook); 
+router.route("/:id").put(updateBook).delete(deleteBook); 
 
 module.exports = router;
