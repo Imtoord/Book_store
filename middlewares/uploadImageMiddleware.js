@@ -43,12 +43,8 @@ exports.resizeImage = (arr) =>
 
 
 
-
-
+  
 const storagex = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, "uploads/books"); // Destination folder for uploaded files
-  },
   filename: function (req, file, cb) {
     const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
 
@@ -61,9 +57,9 @@ const fileFilterx = function (req, file, cb) {
     file.mimetype.startsWith("image/") ||
     file.mimetype === "application/pdf"
   ) {
-    cb(null, true); 
+    cb(null, true);
   } else {
-    cb(new Error("Only images and PDFs are allowed!"), false); 
+    cb(new Error("Only images and PDFs are allowed!"), false);
   }
 };
 
@@ -76,3 +72,13 @@ const upload = multer({
 ]); // Accept both image and PDF files
 
 exports.uploadBook = upload;
+
+const cloudinary = require("cloudinary").v2;
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_SECRET_KEY,
+});
+
+exports.cloudinary = cloudinary;

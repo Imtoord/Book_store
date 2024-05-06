@@ -28,10 +28,6 @@ const BookSchema = new Schema(
       type: String, 
       required: true,
     },
-    pdf: {
-      type: String, 
-      required: true,
-    },
     averageRating: {
       type: Number,
       default: 0,

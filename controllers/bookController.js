@@ -1,3 +1,5 @@
+const { cloudinary } = require("../middlewares/uploadImageMiddleware");
+
 const { uploadBook } = require("../middlewares/uploadImageMiddleware");
 const { Book } = require("../models/Book");
 const {
@@ -35,7 +37,48 @@ exports.getBooks = getAll(Book);
  * @route api/Books
  * @access private
  */
-exports.createBook = createOne(Book);
+
+exports.createBook = async (req, res, next) => {
+  const { title, author, description, price } = req.body;
+  if (!req.file) {
+    return res.status(400).json({
+      success: false,
+      message: "Image file is required",
+    });
+  }
+
+  // Upload image file to Cloudinary
+  cloudinary.uploader.upload(req.file.path, async function (err, result) {
+    if (err) {
+      console.log(err);
+      return res.status(500).json({
+        success: false,
+        message: "Error uploading image file",
+      });
+    }
+
+    // res.status(200).json({
+    //   success: true,
+    //   message: "Image uploaded successfully",
+    //   data: result,
+    // });
+
+    const book = await Book.create({
+      title,
+      author,
+      description,
+      price,
+      cover: result.url,
+    });
+
+    await book.save();
+    res.status(200).json({
+      success: true,
+      message: "book uploaded successfully",
+      data: book,
+    });
+  });
+};
 
 /**
  * @description get Book
