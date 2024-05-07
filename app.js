@@ -1,6 +1,8 @@
+const express = require("express");
 const morgan = require("morgan");
 require("dotenv").config();
-const express = require("express");
+var compression = require("compression");
+
 const app = express();
 
 const connectToDB = require("./config/db");
@@ -14,6 +16,7 @@ connectToDB();
 app.use(express.json()); // json ==> obj
 app.use(express.urlencoded({ extended: false })); // form data
 app.use("/uploads", express.static("uploads")); // image cove
+app.use(compression());
 
 if (process.env.NODE_ENV === "development") {
   app.use(morgan("dev"));

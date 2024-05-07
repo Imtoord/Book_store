@@ -2,9 +2,10 @@ const asyncHandler = require("express-async-handler");
 
 const { ErrorHandler } = require("../utils/errorHandler");
 const { User } = require("../models/User");
+const { Book } = require("../models/Book");
 
-exports.addBookToWishList = asyncHandler(async (req, res, next) => {
-  const { book } = req.body;
+exports.addOrRemoveBookFromWishList = asyncHandler(async (req, res, next) => {
+  const { id } = req.params;
   const userId = req.user._id;
 
   const user = await User.findById(userId);
@@ -12,34 +13,36 @@ exports.addBookToWishList = asyncHandler(async (req, res, next) => {
   if (!user) {
     return next(new ErrorHandler("User not found", 404));
   }
-
-  const isAlreadyInWishList = user.wishList.includes(book);
+  const book = await Book.findById(id);
+  if(!book){
+    return next(new ErrorHandler("there are no book with id "+ id))
+  }
+  const isAlreadyInWishList = user.wishList.includes(id);
 
   if (isAlreadyInWishList) {
-    return next(new ErrorHandler("Book is already in wishlist", 400));
+    return removeBookToWishList(req, res, next);
   }
 
-  user.wishList.push(book);
+  user.wishList.push(id);
 
   await user.save();
 
-  res.status(200).json({
+  return res.status(200).json({
     success: true,
     message: "Book added to wishlist",
   });
 });
 
-exports.removeBookToWishList = asyncHandler(async (req, res, next) => {
+const removeBookToWishList = asyncHandler(async (req, res, next) => {
   await User.findByIdAndUpdate(req.user._id, {
-    $pull: { wishList: req.params.book },
+    $pull: { wishList: req.params.id },
   });
 
-  res.status(200).json({
+  return res.status(200).json({
     success: true,
     message: "Book removed from wishlist",
   });
 });
-
 
 exports.getLoggedUserWishList = asyncHandler(async (req, res, next) => {
   const user = await User.findById(req.user._id).populate("wishList");
@@ -51,9 +54,9 @@ exports.getLoggedUserWishList = asyncHandler(async (req, res, next) => {
     });
   }
 
-  res.status(200).json({
+  return res.status(200).json({
     success: true,
+    resulte: user.wishList.length,
     wishList: user.wishList,
   });
 });
-
