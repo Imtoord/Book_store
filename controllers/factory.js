@@ -6,7 +6,7 @@ const ApiFeatures = require("../utils/apiFeatuers");
 // delete
 exports.deleteOne = (Model) =>
   asyncHandler(async (req, res, next) => {
-    const docs = await Model.findByIdAndDelete(req.params.id);
+    const docs = await Model.findOneAndDelete({ _id: req.params.id });
 
     if (!docs) {
       return next(new ErrorHandler(`${Model.name} not found`, 404));
@@ -53,7 +53,7 @@ exports.getOne = (Model) =>
     });
   });
 
-// create One
+// create One createOne
 exports.createOne = (Model) =>
   asyncHandler(async (req, res, next) => {
     const docs = await new Model(req.body);
@@ -86,15 +86,14 @@ exports.getAll = (Model) =>
     const results = await mongoQuery;
     const { Book } = Model;
 
-      return res.status(200).json({
-        success: true,
-        results: results.length,
-        pagination,
-        data: results,
-      });
+    return res.status(200).json({
+      success: true,
+      results: results.length,
+      pagination,
+      data: results,
+    });
   });
 
-  
 exports.search = (Model) =>
   asyncHandler(async (req, res, next) => {
     const { keyword } = req.query;

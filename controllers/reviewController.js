@@ -23,7 +23,7 @@ exports.exist = async (req, res, next) => {
     book: req.body.book,
   });
   if (review) {
-    return next(new ErrorHandler("You already reviewed this product!!!!", 400));
+    return next(new ErrorHandler("You already reviewed this Book!!!!", 400));
   }
   req.body.user = req.user._id.toString();
   next();

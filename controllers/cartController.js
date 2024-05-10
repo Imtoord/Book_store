@@ -82,3 +82,10 @@ exports.getLoggedUserCart = asyncHandler(async (req, res, next) => {
     data: cart,
   });
 });
+
+exports.clearCart = asyncHandler(async (req, res, next) => {
+  await Cart.findOneAndDelete({ user_id: req.user._id });
+  res.status(204).json({
+    success: true,
+  });
+});

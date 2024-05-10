@@ -6,5 +6,6 @@ router.use(verifyToken);
 
 router.post("/:id", cartController.addOrRemoveBookFromCart);
 router.get("/", cartController.getLoggedUserCart);
+router.delete("/", cartController.clearCart);
 
 module.exports = router;
