@@ -42,7 +42,7 @@ reviewSchema.statics.updateBookStats = async function (bookId) {
   const res = await this.aggregate([
     {
       $match: {
-        book: bookId
+        book: bookId,
       },
     },
     {
@@ -54,7 +54,7 @@ reviewSchema.statics.updateBookStats = async function (bookId) {
     },
   ]);
 
-  console.log(res)
+  console.log(res);
   if (res.length > 0) {
     await Book.findByIdAndUpdate(bookId, {
       averageRating: res[0].averageRating,
@@ -74,9 +74,9 @@ reviewSchema.post("save", async function () {
 });
 
 // Post-remove hook to update book stats after removing a review
-reviewSchema.pre("findOneAndDelete", async function () {
-  await this.constructor.updateBookStats(this.book);
-});
+// reviewSchema.pre("findOneAndDelete", async function () {
+//   await this.constructor.updateBookStats(this.book);
+// });
 
 const Review = mongoose.model("Review", reviewSchema);
 module.exports = { Review };
