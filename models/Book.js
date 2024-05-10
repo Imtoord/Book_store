@@ -8,7 +8,7 @@ const BookSchema = new Schema(
       required: true,
       minlength: 3,
     },
-    author: { 
+    author: {
       type: Schema.Types.ObjectId,
       ref: "Author",
       required: true,
@@ -31,29 +31,40 @@ const BookSchema = new Schema(
       max: 1000,
     },
     cover: {
-      type: String, 
+      type: String,
       required: true,
+    },
+    averageRating: {
+      type: Number,
+      default: 0,
+    },
+    reviewCount: {
+      type: Number,
+      default: 0,
     },
     rating: {
       type: Number,
       default: 0,
       min: 0,
       max: 5,
-    }
+    },
   },
   {
     timestamps: true,
   }
 );
 
-// popplute auther 
-BookSchema.pre(["save", "find", "findOne", "findOneAndUpdate"], function (next) {
-  this.populate("author");
-  next();
-});
+// popplute auther
+BookSchema.pre(
+  ["save", "find", "findOne", "findOneAndUpdate"],
+  function (next) {
+    this.populate("author");
+    next();
+  }
+);
 
 const Book = mongoose.model("Book", BookSchema);
 
 module.exports = {
-  Book
+  Book,
 };
