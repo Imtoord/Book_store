@@ -56,7 +56,6 @@ The API uses several middleware functions to handle authentication, authorizatio
 
 - `verifyToken`: Verifies the JWT token sent in the `Authorization` header.
 - `verifyTokenAndAdmin`: Verifies the JWT token and checks if the user is an administrator.
-- `ifToken`: Checks if the `Authorization` header is present and sends an error response if it is not.
 
 **Middleware Functions**
 
