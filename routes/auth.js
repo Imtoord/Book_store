@@ -1,11 +1,13 @@
+// auth.js
 const express = require("express");
+
 const router = express.Router();
 
 const { verifyToken } = require("../middlewares/verifyToken");
 
 const {
   signup,
-  login,
+  login,  
   changePassword,
   getMe,
   logout,

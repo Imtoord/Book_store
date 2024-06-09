@@ -23,7 +23,7 @@ exports.resizeImage = resizeImage(arr);
  */
 exports.signup = asyncHandler(async (req, res, next) => {
   // Validate request body
-  const { username, email, password, image } = req.body;
+  const { username, email, password, image, phone } = req.body;
   if (!username || !email || !password) {
     return next(
       new ErrorHandler("Username, email, and password are required", 400)
@@ -46,6 +46,7 @@ exports.signup = asyncHandler(async (req, res, next) => {
     email,
     password: hashedPassword,
     image,
+    phone,
   });
 
   // Generate JWT token

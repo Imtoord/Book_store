@@ -15,6 +15,14 @@ const UserSchema = new Schema({
     required: true,
     unique: true,
   },
+  phone: {
+    type: String,
+    required: true,
+    unique: true,
+    trim: true,
+    minlength: 11,
+    maxlength: 11,
+  },
   password: {
     type: String,
     required: true,
@@ -38,7 +46,6 @@ UserSchema.methods.generateAuthToken = function () {
     expiresIn: "30d",
   });
 };
-
 
 // not show password and tokens
 // UserSchema.pre(/^find/, function (next) {

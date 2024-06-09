@@ -6,12 +6,7 @@ const { ErrorHandler } = require("../utils/errorHandler");
 const ApiFeatures = require("../utils/apiFeatuers");
 const { Book } = require("../models/Book");
 const { Cart } = require("../models/Cart");
-const {
-  deleteOne,
-  updateOne,
-  getOne,
-  search,
-} = require("./factory");
+const { deleteOne, updateOne, getOne, search } = require("./factory");
 
 exports.getBooks = asyncHandler(async (req, res) => {
   let filterObjx = {};
@@ -61,7 +56,8 @@ exports.getBooks = asyncHandler(async (req, res) => {
 });
 
 exports.createBook = asyncHandler(async (req, res, next) => {
-  const { title, author, description, price, rating, new_price } = req.body;
+  const { title, author, description, price, rating, new_price, pdf } =
+    req.body;
 
   if (!req.file) {
     return res.status(400).json({
@@ -87,6 +83,7 @@ exports.createBook = asyncHandler(async (req, res, next) => {
       new_price,
       cover: result.url,
       rating,
+      pdf,
     });
 
     res.status(200).json({

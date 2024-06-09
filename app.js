@@ -2,6 +2,7 @@ const express = require("express");
 const morgan = require("morgan");
 require("dotenv").config();
 var compression = require("compression");
+const listEndpoints = require("express-list-endpoints");
 
 const app = express();
 
@@ -31,6 +32,11 @@ app.get("/", (req, res, next) => {
 
 // root Router
 app.use("/api/v1", require("./routes/index"));
+
+app.get("/api/endpoints", (req, res) => {
+  const endpoints = listEndpoints(app);
+  res.json(endpoints);
+});
 
 app.all("*", (req, res, next) => {
   next(
